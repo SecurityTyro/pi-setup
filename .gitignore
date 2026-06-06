@@ -1,0 +1,27 @@
+# Secrets / credentials
+auth.json
+*.key
+*.pem
+.env
+.env.*
+
+# Pi runtime state
+sessions/
+npm/
+git/
+mcp-cache.json
+mcp-npx-cache.json
+mcp-onboarding.json
+local-models.json
+
+# Local generated backups
+*.backup
+*.bak
+themes.backup-*/
+
+# Node / editor noise
+node_modules/
+.DS_Store
+.vscode/
+.idea/
+*.log

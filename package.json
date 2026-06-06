@@ -1,0 +1,25 @@
+{
+  "name": "abhinand-pi-setup",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Personal Pi coding agent setup: extensions, themes, and reproducible config examples.",
+  "keywords": [
+    "pi-package",
+    "pi-coding-agent",
+    "themes",
+    "extensions"
+  ],
+  "license": "UNLICENSED",
+  "pi": {
+    "extensions": [
+      "./extensions"
+    ],
+    "themes": [
+      "./themes"
+    ]
+  },
+  "peerDependencies": {
+    "@earendil-works/pi-coding-agent": "*",
+    "@earendil-works/pi-tui": "*"
+  }
+}

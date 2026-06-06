@@ -1,0 +1,17 @@
+{
+  "lastChangelogVersion": "0.78.0",
+  "defaultProvider": "openai-codex",
+  "defaultModel": "gpt-5.5",
+  "theme": "one-dark-pro",
+  "compaction": {
+    "enabled": true
+  },
+  "packages": [
+    "npm:pi-web-access",
+    "npm:@juicesharp/rpiv-ask-user-question",
+    "npm:@juicesharp/rpiv-todo",
+    "npm:pi-markdown-preview",
+    "npm:pi-mcp-adapter"
+  ],
+  "defaultThinkingLevel": "medium"
+}
