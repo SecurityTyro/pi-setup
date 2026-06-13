@@ -60,6 +60,13 @@ Do **not** install this checkout as an active Pi package in normal use. Loading 
 
 ## Set up from GitHub on a machine
 
+On a minimal Ubuntu machine/container, install clone prerequisites first:
+
+```bash
+sudo apt-get update
+sudo apt-get install -y git ca-certificates
+```
+
 Clone the repo, then restore the live Pi setup from it:
 
 ```bash

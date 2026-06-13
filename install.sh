@@ -57,6 +57,11 @@ remove_legacy_package_reference() {
   local settings="$PI_HOME/settings.json"
   [[ -f "$settings" ]] || return 0
 
+  if ! command -v python3 >/dev/null 2>&1; then
+    echo "Skipping legacy package-reference cleanup: python3 not found."
+    return 0
+  fi
+
   python3 - <<'PY' "$settings" "$ROOT"
 import json
 import sys
