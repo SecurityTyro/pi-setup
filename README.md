@@ -175,6 +175,23 @@ pi-setup-sync --skills hf-cli,diagnose "Back up selected skills"
 pi-setup-sync --no-skills "Skip skill backup"
 ```
 
+## Manual tests
+
+Run the Docker end-to-end smoke test when you want to verify the setup/restore contract without adding CI:
+
+```bash
+tests/docker-e2e.sh
+```
+
+The test starts a fresh Ubuntu container, installs minimal clone prerequisites, clones this repo from its git remote, runs `./install.sh --restore --copy-config`, verifies the live `~/.pi/agent` layout, then checks that `pi-setup-sync` can copy a live change back into the cloned repo without pushing.
+
+Useful variants:
+
+```bash
+tests/docker-e2e.sh --restore-only
+tests/docker-e2e.sh --remote https://github.com/<user>/<repo>.git --branch main
+```
+
 ## Useful Pi commands
 
 Welcome update notices only appear for major/minor updates, not patches. Toggle them with:
