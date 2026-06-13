@@ -9,7 +9,7 @@ Personal reproducible setup for [Pi coding agent](https://pi.dev): extensions, c
   - preserves Pi's native themed header and loaded skills/extensions/themes listing
 - `extensions/` — custom Pi extensions
   - themed startup welcome card
-  - `/context` usage breakdown for startup tokens, messages, and tool calls (overlay-only; not added to model context)
+  - `/context` usage breakdown for startup tokens, messages, and tool calls (scrollback output; not added to model context)
   - `/filechanges` review/accept/decline workflow for Pi-made `edit`/`write` changes
   - custom footer
   - local model manager

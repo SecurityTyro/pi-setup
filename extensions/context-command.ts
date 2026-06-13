@@ -7,7 +7,6 @@
  */
 
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
-import { Box, matchesKey, Text, truncateToWidth, visibleWidth } from "@earendil-works/pi-tui";
 
 type AnyRecord = Record<string, any>;
 
@@ -40,7 +39,7 @@ type ContextReport = {
 };
 
 const TOKEN_DIVISOR = 4;
-const MAX_LIST = 8;
+const MAX_LIST = 6;
 
 function estimateTokens(value: unknown): number {
 	if (value == null) return 0;
@@ -284,71 +283,17 @@ function plainReport(report: ContextReport): string {
 	return lines.join("\n");
 }
 
-function renderReport(report: ContextReport, theme: any, width: number): string[] {
-	const barWidth = Math.max(12, Math.min(28, Math.floor(width / 4)));
-	const usedCells = Math.max(0, Math.min(barWidth, Math.round((report.total / report.limit) * barWidth)));
-	const bar = `${"█".repeat(usedCells)}${"░".repeat(barWidth - usedCells)}`;
-	const lines: string[] = [];
-	const add = (line = "") => lines.push(line);
-	const item = (prefix: string, row: Item) => {
-		const amount = `${fmt(row.tokens)} (${pct(row.tokens, report.limit)})`;
-		add(`${theme.fg("dim", prefix)} ${theme.fg("text", row.label)} ${theme.fg("dim", "·")} ${theme.fg("accent", amount)}${row.detail ? ` ${theme.fg("dim", "· " + row.detail)}` : ""}`);
-	};
-
-	add(`${theme.fg("accent", theme.bold("Context Usage"))} ${theme.fg("dim", "·")} ${theme.fg("text", report.model)}`);
-	add(`${theme.fg(report.total / report.limit > 0.8 ? "error" : report.total / report.limit > 0.5 ? "warning" : "success", bar)} ${theme.fg("text", `${fmt(report.total)}/${fmt(report.limit)}`)} ${theme.fg("dim", `(${pct(report.total, report.limit)}) · free ${fmt(report.free)}`)}`);
-	add("");
-	add(theme.fg("dim", "Estimated usage by category"));
-	for (const row of report.categories) item("├", row);
-	add("");
-	add(`${theme.fg("accent", "Startup context")} ${theme.fg("dim", report.mode === "startup" ? "before first message" : "base payload")}`);
-	for (const row of report.startup.system) item("├", row);
-	if (report.startup.memory.length) {
-		add(theme.fg("dim", "├ Memory files"));
-		for (const row of report.startup.memory) item("│ ├", row);
-	}
-	if (report.startup.tools.length) {
-		add(theme.fg("dim", `├ System tools · top ${report.startup.tools.length}`));
-		for (const row of report.startup.tools) item("│ ├", row);
-	}
-	for (const [scope, rows] of Object.entries(report.startup.skills)) {
-		add(theme.fg("dim", `├ Skills · ${scope}`));
-		for (const row of rows) item("│ ├", row);
-	}
-	if (report.mode === "conversation") {
-		add("");
-		add(`${theme.fg("accent", "Conversation")} ${theme.fg("dim", `${report.conversation.entries} entries`)}`);
-		for (const row of report.conversation.byRole) item("├", row);
-		if (report.conversation.toolCalls.length) {
-			add(theme.fg("dim", "├ Tool calls/results"));
-			for (const row of report.conversation.toolCalls) item("│ ├", row);
-		}
-		if (report.conversation.largest.length) {
-			add(theme.fg("dim", "├ Largest message entries"));
-			for (const row of report.conversation.largest) item("│ ├", row);
-		}
-	}
-
-	return lines.map((line) => visibleWidth(line) > width ? truncateToWidth(line, width) : line);
-}
-
-async function showContextOverlay(report: ContextReport, ctx: any) {
-	await ctx.ui.custom((_tui: any, theme: any, _kb: any, done: (value?: unknown) => void) => ({
-		render(width: number): string[] {
-			const box = new Box(1, 1, (s) => theme.bg("customMessageBg", s));
-			const body = [
-				...renderReport(report, theme, Math.max(20, width - 2)),
-				"",
-				theme.fg("dim", "Enter/Esc to close · overlay only, not added to model context"),
-			].join("\n");
-			box.addChild(new Text(body, 0, 0));
-			return box.render(width);
-		},
-		invalidate() {},
-		handleInput(data: string) {
-			if (matchesKey(data, "enter") || matchesKey(data, "escape") || data === "q") done(undefined);
-		},
-	}), { overlay: true });
+function appendContextReport(report: ContextReport, ctx: any) {
+	ctx.sessionManager.appendMessage({
+		role: "bashExecution",
+		command: "!! /context",
+		output: `${plainReport(report)}\n\n(not added to model context)`,
+		exitCode: 0,
+		cancelled: false,
+		truncated: false,
+		excludeFromContext: true,
+		timestamp: Date.now(),
+	});
 }
 
 export default function (pi: ExtensionAPI) {
@@ -360,7 +305,7 @@ export default function (pi: ExtensionAPI) {
 				console.log(plainReport(report));
 				return;
 			}
-			await showContextOverlay(report, ctx);
+			appendContextReport(report, ctx);
 		},
 	});
 }
