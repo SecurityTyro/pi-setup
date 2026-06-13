@@ -14,6 +14,7 @@ Personal reproducible setup for [Pi coding agent](https://pi.dev): extensions, c
   - local model manager
 - `themes/` — polished custom themes
   - `nebula-pulse` *(current default)*
+  - `opencode`
   - `tokyo-night`
   - `one-dark-pro`
   - `dracula`
