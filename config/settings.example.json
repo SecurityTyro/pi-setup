@@ -27,9 +27,12 @@
     },
     "npm:@narumitw/pi-goal",
     "npm:@juicesharp/rpiv-advisor",
-    "npm:@dustydonkey/pi-spinner"
+    "npm:@dustydonkey/pi-spinner",
+    "npm:@ayulab/pi-rewind",
+    "npm:@juicesharp/rpiv-btw",
+    "npm:@ff-labs/pi-fff"
   ],
-  "defaultThinkingLevel": "high",
+  "defaultThinkingLevel": "medium",
   "hideThinkingBlock": true,
   "skills": [
     "+skills/find-skills/SKILL.md"
