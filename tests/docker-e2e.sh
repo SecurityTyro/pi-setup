@@ -135,6 +135,13 @@ echo "commit=$(git rev-parse --short HEAD)"
 
 ./install.sh --restore --copy-config
 
+cat > /usr/local/bin/pi <<PI_FAKE
+#!/usr/bin/env bash
+echo 0.0.0-container
+PI_FAKE
+chmod +x /usr/local/bin/pi
+/root/.local/bin/pi --version | grep -q "0.0.0-container"
+
 printf "\nVERIFY RESTORE\n"
 test -d /root/.pi/agent/extensions
 test -d /root/.pi/agent/themes
@@ -154,6 +161,11 @@ test "$skill_count" -gt 0
 
 if grep -q "pi-setup" /root/.pi/agent/settings.json; then
   echo "error: settings contains a pi-setup self-reference" >&2
+  cat /root/.pi/agent/settings.json >&2
+  exit 1
+fi
+if grep -Eq '"(defaultProvider|defaultModel|enabledModels)"' /root/.pi/agent/settings.json; then
+  echo "error: example settings should not contain personal model/provider selections" >&2
   cat /root/.pi/agent/settings.json >&2
   exit 1
 fi
@@ -180,6 +192,13 @@ if [[ "$PI_SETUP_RUN_SYNC" == "1" ]]; then
   git log --oneline -1 | grep -q "Container sync smoke"
   grep -q "container-sync-smoke" extensions/flow-title.ts
 fi
+
+printf "\nVERIFY UNINSTALL\n"
+./uninstall.sh
+test -x /usr/local/bin/pi
+test ! -e /root/.local/bin/pi
+test ! -e /root/.local/bin/pi-setup-sync
+test ! -e /root/.pi/agent/themes/nebula-pulse.json
 
 echo "remote clone pi-setup e2e passed"
 '

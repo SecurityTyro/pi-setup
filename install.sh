@@ -27,6 +27,9 @@ Usage:
   ./install.sh                 # install sync helper + compact launcher only
   ./install.sh --copy-config   # also overwrite ~/.pi/agent/settings.json and mcp.json
   ./install.sh --restore       # also restore extensions/themes/skills into ~/.pi/agent
+
+Recommended: install the Pi CLI first. The compact launcher wraps an existing
+Pi binary and will look in /usr/local/bin/pi, /usr/bin/pi, or PI_REAL_BIN.
 EOF
 }
 
@@ -139,6 +142,9 @@ if [[ -f "$ROOT/bin/pi" ]]; then
   cp "$ROOT/bin/pi" "$HOME/.local/bin/pi"
   chmod +x "$HOME/.local/bin/pi"
   echo "Installed compact Pi launcher: $HOME/.local/bin/pi"
+  if [[ -z "${PI_REAL_BIN:-}" && ! -x /usr/local/bin/pi && ! -x /usr/bin/pi && ! -x /opt/homebrew/bin/pi ]]; then
+    echo "Warning: no existing Pi binary found. Install Pi first, or set PI_REAL_BIN before running the launcher."
+  fi
 fi
 
 echo "Done. Restart Pi or run /reload in an existing session."

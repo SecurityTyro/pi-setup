@@ -272,6 +272,15 @@ dst = Path(sys.argv[2])
 repo_root = Path(sys.argv[3]).resolve()
 
 data = json.loads(src.read_text())
+
+# Keep the checked-in example portable. Local model/provider selections are
+# machine-specific and can produce noisy "No models match pattern" warnings for
+# anyone restoring this repo before configuring their own providers.
+for key in ("defaultProvider", "defaultModel", "enabledModels"):
+    if key in data:
+        data.pop(key)
+        print(f"settings ok: removed local-only {key}")
+
 packages = data.get("packages")
 if isinstance(packages, list):
     kept = []
@@ -387,7 +396,7 @@ validate_json "$ROOT"/themes/*.json
 validate_themes
 validate_skills
 
-git add bin extensions themes skills config package.json README.md install.sh sync.sh setup_sync.sh .gitignore
+git add bin extensions themes skills config package.json README.md install.sh uninstall.sh sync.sh setup_sync.sh .gitignore
 
 if git diff --cached --quiet; then
   echo "No Pi setup changes to sync."

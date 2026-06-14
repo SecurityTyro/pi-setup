@@ -1,7 +1,5 @@
 {
   "lastChangelogVersion": "0.79.1",
-  "defaultProvider": "local-in6bhf1g",
-  "defaultModel": "Qwen3.6-27B",
   "theme": "nebula-pulse",
   "compaction": {
     "enabled": true
@@ -32,15 +30,6 @@
     "npm:@dustydonkey/pi-spinner"
   ],
   "defaultThinkingLevel": "high",
-  "enabledModels": [
-    "openai-codex/gpt-5.5",
-    "anthropic/claude-opus-4-8",
-    "anthropic/claude-sonnet-4-6",
-    "deepseek/deepseek-v4-flash",
-    "deepseek/deepseek-v4-pro",
-    "anthropic/claude-haiku-4-5",
-    "local-in6bhf1g/Qwen3.6-27B"
-  ],
   "hideThinkingBlock": true,
   "skills": [
     "+skills/find-skills/SKILL.md"

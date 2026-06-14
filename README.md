@@ -6,6 +6,8 @@
 
 Personal `pi-setup` for [Pi coding agent](https://pi.dev): extensions, custom themes, skills, config examples, and sync tooling.
 
+**Recommendation:** install the Pi CLI first, then run this setup. This repo wraps and customizes an existing Pi install; it is not a replacement installer for Pi itself.
+
 ## Core model
 
 `~/.pi/agent` is the live Pi setup. This repo is the versioned `pi-setup` copy used to back up that live setup to GitHub and recreate it on any machine.
@@ -27,7 +29,7 @@ Normal flow:
 
 ```txt
 make Pi changes in ~/.pi/agent  ->  pi-setup-sync  ->  GitHub
-GitHub clone on another machine ->  ./install.sh --restore --copy-config  ->  ~/.pi/agent
+GitHub clone on another machine ->  install Pi CLI -> ./install.sh --restore --copy-config -> ~/.pi/agent
 ```
 
 Do **not** install this checkout as an active Pi package in normal use. Loading both `~/.pi/agent` and this repo causes duplicate skill/theme conflict warnings at startup. If you are editing Pi functionality while your shell is inside this repo, edit the live file under `~/.pi/agent/...` first, then run `pi-setup-sync` to copy it back here.
@@ -60,6 +62,8 @@ Do **not** install this checkout as an active Pi package in normal use. Loading 
 
 ## Set up from GitHub on a machine
 
+Install Pi first (preferred), so `pi` already works before this repo adds the optional compact launcher. In containers or unusual installs, Pi may live at `/usr/local/bin/pi`; the launcher now detects that, and you can override it with `PI_REAL_BIN=/path/to/pi`.
+
 On a minimal Ubuntu machine/container, install clone prerequisites first:
 
 ```bash
@@ -86,6 +90,8 @@ cd ~/dev/ai-agents/pi-setup
 `--restore` copies repo resources into `~/.pi/agent/extensions`, `~/.pi/agent/themes`, and `~/.pi/agent/skills`.
 
 `--copy-config` copies `config/settings.example.json` and `config/mcp.example.json` into `~/.pi/agent/`.
+
+The example settings intentionally do **not** include personal model/provider selections (`defaultProvider`, `defaultModel`, or `enabledModels`). Configure your own models after restore; otherwise Pi may warn about model IDs that only exist on someone else's machine.
 
 Warnings:
 
@@ -128,6 +134,22 @@ This installs:
 - compact launcher `bin/pi` into `~/.local/bin/pi`
 
 It also removes any legacy settings entry that points Pi at this repo as an active package.
+
+## Uninstall pi-setup changes
+
+To remove only what this repo installed/restored while leaving the underlying Pi CLI untouched:
+
+```bash
+./uninstall.sh
+```
+
+This removes the compact launcher, the `pi-setup-sync` helper if it points at this checkout, and restored resources under `~/.pi/agent/extensions`, `themes`, and `skills` that are owned by this repo. It removes copied example config files only when they are still identical to the examples; modified settings are left in place.
+
+Preview first:
+
+```bash
+./uninstall.sh --dry-run
+```
 
 ## Sync live Pi tweaks back to GitHub
 

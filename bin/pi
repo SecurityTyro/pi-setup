@@ -5,7 +5,38 @@ set -euo pipefail
 # Replaces Pi's large startup update boxes with one compact preflight line while
 # leaving all themed TUI rendering to Pi/extensions.
 
-REAL_PI="${PI_REAL_BIN:-/usr/bin/pi}"
+resolve_real_pi() {
+  if [[ -n "${PI_REAL_BIN:-}" ]]; then
+    printf '%s\n' "$PI_REAL_BIN"
+    return 0
+  fi
+
+  local self candidate
+  self="$(readlink -f "${BASH_SOURCE[0]}" 2>/dev/null || printf '%s\n' "${BASH_SOURCE[0]}")"
+
+  for candidate in /usr/local/bin/pi /usr/bin/pi /opt/homebrew/bin/pi /usr/bin/env; do
+    [[ "$candidate" == "/usr/bin/env" ]] && continue
+    [[ -x "$candidate" ]] || continue
+    [[ "$(readlink -f "$candidate" 2>/dev/null || printf '%s\n' "$candidate")" == "$self" ]] && continue
+    printf '%s\n' "$candidate"
+    return 0
+  done
+
+  while IFS= read -r candidate; do
+    [[ -x "$candidate" ]] || continue
+    [[ "$(readlink -f "$candidate" 2>/dev/null || printf '%s\n' "$candidate")" == "$self" ]] && continue
+    printf '%s\n' "$candidate"
+    return 0
+  done < <(type -P -a pi 2>/dev/null || true)
+
+  return 1
+}
+
+REAL_PI="$(resolve_real_pi || true)"
+if [[ -z "$REAL_PI" ]]; then
+  echo "error: could not find the real Pi binary. Install Pi first or set PI_REAL_BIN=/path/to/pi." >&2
+  exit 127
+fi
 
 major_minor_gt() {
   python3 - "$1" "$2" <<'PY' 2>/dev/null
