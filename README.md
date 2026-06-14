@@ -221,3 +221,14 @@ Never commit secrets or runtime state:
 - `~/.pi/agent/git/`
 - `~/.pi/agent/local-models.json` unless intentionally sanitized
 - cache files such as `mcp-cache.json`
+
+## References / Citations
+
+References and inspirations.
+
+- [Pi Packages](https://pi.dev/packages)
+- [mattpocock/skills](https://github.com/mattpocock/skills)
+- [amosblomqvist/pi-config](https://github.com/amosblomqvist/pi-config)
+- [llama.cpp](https://github.com/ggml-org/llama.cpp)
+- [noonghunna/club-3090](https://github.com/noonghunna/club-3090)
+- [r/LocalLLaMA](https://www.reddit.com/r/LocalLLaMA)
