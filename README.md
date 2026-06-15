@@ -36,15 +36,29 @@ Do **not** install this checkout as an active Pi package in normal use. Loading 
 
 ## What's included
 
+| Area | Included |
+| --- | --- |
+| Launcher | Compact `pi` wrapper with one-line major/minor update notices |
+| Install safety | `--dry-run` preview, `--backup`, and `--revert <backup-dir>` |
+| Sync | `pi-setup-sync` copies live `~/.pi/agent` resources back to this repo, commits, and pushes |
+| Extensions | welcome header, context breakdown, file-change review, safety guard, custom footer, local model manager |
+| Config examples | Safe `settings.example.json` and `mcp.example.json` without personal provider/model choices |
+| Themes | `nebula-pulse`, `opencode`, `tokyo-night`, `one-dark-pro`, and more |
+| Skills | Portable backups of installed Pi/agent skills |
+| Smoke test | Docker restore/sync contract test in `tests/docker-e2e.sh` |
+
 - `bin/pi` — compact Pi launcher wrapper
   - one-line major/minor update notices instead of large startup boxes
+  - suppresses Pi's large built-in update boxes via `PI_OFFLINE=1` after its own compact notice
+  - detects the real Pi binary from `PI_REAL_BIN`, `/usr/local/bin/pi`, `/usr/bin/pi`, or `/opt/homebrew/bin/pi`
   - preserves Pi's native themed header and loaded skills/extensions/themes listing
 - `extensions/` — versioned copies of custom Pi extensions
-  - themed startup welcome card
+  - themed startup welcome card with `/welcome updates on|off`
   - `/context` usage breakdown for startup tokens, messages, and tool calls (scrollback output; not added to model context)
   - `/filechanges` review/accept/decline workflow for Pi-made `edit`/`write` changes
-  - custom footer with token usage and git branch
-  - local model manager
+  - `/safety` and `/permissions` guard rails for risky shell/file actions
+  - custom footer with input/output/reasoning tokens, cost, context %, tokens/sec, model, thinking level, and git branch
+  - `/local-models` manager for OpenAI-compatible local endpoints such as Ollama, LM Studio, RunPod, or llama.cpp servers
 - `themes/` — versioned copies of custom themes
   - `nebula-pulse` *(current default)*
   - `opencode`
@@ -71,12 +85,26 @@ sudo apt-get update
 sudo apt-get install -y git ca-certificates
 ```
 
-Clone the repo, then restore the live Pi setup from it:
+Fast path with preview first:
+
+```bash
+# Show exactly what would change without installing anything
+curl -fsSL https://raw.githubusercontent.com/abhinand5/pi-setup/main/install.sh \
+  | bash -s -- --restore --copy-config --dry-run
+
+# Install with a timestamped backup you can revert
+curl -fsSL https://raw.githubusercontent.com/abhinand5/pi-setup/main/install.sh \
+  | bash -s -- --restore --copy-config --backup
+```
+
+The one-line installer clones/updates this repo at `~/dev/ai-agents/pi-setup` by default, then runs the checked-out installer. Override with `PI_SETUP_CHECKOUT=/path/to/pi-setup` or `PI_SETUP_REPO_URL=https://github.com/<user>/<repo>.git`.
+
+Manual clone path:
 
 ```bash
 git clone git@github.com:abhinand5/pi-setup.git ~/dev/ai-agents/pi-setup
 cd ~/dev/ai-agents/pi-setup
-./install.sh --restore --copy-config
+./install.sh --restore --copy-config --backup
 ```
 
 For HTTPS:
@@ -84,12 +112,22 @@ For HTTPS:
 ```bash
 git clone https://github.com/abhinand5/pi-setup.git ~/dev/ai-agents/pi-setup
 cd ~/dev/ai-agents/pi-setup
-./install.sh --restore --copy-config
+./install.sh --restore --copy-config --backup
+```
+
+Useful installer options:
+
+```bash
+./install.sh --restore --copy-config --dry-run   # preview without changing files
+./install.sh --restore --copy-config --backup    # save current live files first
+./install.sh --revert ~/.pi/agent/backups/pi-setup-YYYYMMDD-HHMMSS
 ```
 
 `--restore` copies repo resources into `~/.pi/agent/extensions`, `~/.pi/agent/themes`, and `~/.pi/agent/skills`.
 
 `--copy-config` copies `config/settings.example.json` and `config/mcp.example.json` into `~/.pi/agent/`.
+
+`--backup` saves current `extensions`, `themes`, `skills`, `settings.json`, and `mcp.json` under `~/.pi/agent/backups/pi-setup-*` before replacing anything. Revert with the exact command printed at the end of install.
 
 The example settings intentionally do **not** include personal model/provider selections (`defaultProvider`, `defaultModel`, or `enabledModels`). Configure your own models after restore; otherwise Pi may warn about model IDs that only exist on someone else's machine.
 
@@ -97,6 +135,7 @@ Warnings:
 
 - `--restore` replaces the current contents of those live resource directories.
 - `--copy-config` overwrites `~/.pi/agent/settings.json` and `~/.pi/agent/mcp.json`.
+- Use `--dry-run` first if you only want to preview the restore.
 
 ## Use your own GitHub repo
 
@@ -213,6 +252,70 @@ Useful variants:
 tests/docker-e2e.sh --restore-only
 tests/docker-e2e.sh --remote https://github.com/<user>/<repo>.git --branch main
 ```
+
+## Feature audit
+
+This repo currently includes these Pi customizations.
+
+### Launcher and startup
+
+- `bin/pi` wraps an existing Pi CLI instead of replacing it.
+- Shows compact update notices only for major/minor Pi or npm package updates.
+- Uses `PI_COMPACT_UPDATE_CHECK=0` or `/welcome updates off` to disable compact update notices.
+- Uses `PI_REAL_BIN=/path/to/pi` if Pi is installed somewhere unusual.
+- `extensions/flow-title.ts` replaces the startup header with a themed Pi logo, version, active model, cwd, key hints, and project name.
+
+### Commands added by extensions
+
+```txt
+/welcome updates on|off       # toggle compact startup update notices
+/context                      # explain context-window usage
+/filechanges                  # inspect tracked edit/write changes and diffs
+/filechanges-accept [force]   # keep files and clear the filechanges log
+/filechanges-decline [force]  # revert tracked Pi-made changes
+/safety enable|disable|status # manage Safety Guard
+/permissions ...              # alias for /safety
+/local-models                 # add, refresh, remove, and select local LLM endpoints
+```
+
+### Context and review workflow
+
+- `/context` estimates startup prompt, skills, context files, selected tools, messages, and tool-call result usage.
+- `/filechanges` tracks successful Pi `edit` and `write` tool calls, stores baselines in the session, shows a status/widget, renders diffs, and can accept or revert all tracked changes.
+- Non-interactive accept/decline requires `force` to avoid accidental destructive reverts.
+
+### Safety Guard
+
+- Injects a short safety instruction before agent start.
+- Blocks or asks for confirmation before destructive/risky actions not explicitly requested by the user.
+- Detects force pushes, amend/rebase/reset hard, branch/tag deletion, recursive deletion, protected path writes, package removals, service changes, broad `sudo`, and context purge.
+- In git repos, normal recoverable edits are allowed without extra prompts.
+
+### Local models
+
+- `/local-models` manages OpenAI-compatible endpoints.
+- Stores endpoint metadata in `~/.pi/agent/local-models.json`.
+- Registers available models as `local-<endpoint-id>` providers during extension load so `/model` can see them.
+- Supports endpoint refresh, model selection, and endpoint removal.
+
+### Footer and themes
+
+- Custom footer shows input/output/reasoning tokens, cost, context percentage, tokens/sec, current model, thinking level, and git branch.
+- Theme files define reusable palettes for the header, footer, diffs, thinking levels, markdown, and tool output.
+
+### Configured packages
+
+`config/settings.example.json` registers these external Pi packages by default:
+
+- ask-user-question and todo tools
+- Markdown preview/export
+- MCP adapter
+- context-mode and related context skills
+- goal completion helper
+- advisor tool
+- spinner, rewind, `/btw`, and fff search
+
+`config/mcp.example.json` currently configures the remote grep MCP server.
 
 ## Useful Pi commands
 
